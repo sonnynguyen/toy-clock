@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sun and Moon Toy Clock</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#ffc533">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: one chunky yellow toy on a cool tabletop. Sky window on top,
+   digital readout under it, teaching-clock face below. Hours are always blue,
+   minutes always red, on the hands, the numerals and the digits alike. */
+:root{
+  color-scheme: light;
+  --page:#dfe8ee;
+  --toy:#ffc533;
+  --toy-edge:#dc9c00;
+  --face:#fffdf6;
+  --ink:#1c2333;
+  --ink-soft:#5a4a12;
+  --hour:#1d5fd0;
+  --minute:#e03a2b;
+  --font-display:"Baloo 2","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  --font-body:"Nunito Sans","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--page);
+  color:var(--ink);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.4;
+  padding:20px 16px 32px;
+  display:flex;
+  justify-content:center;
+}
+.toy{
+  width:100%;
+  max-width:440px;
+  background:var(--toy);
+  border-radius:36px;
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  box-shadow:0 10px 0 var(--toy-edge), 0 26px 40px -12px rgba(28,35,51,.35);
+}
+h1{
+  margin:0;
+  position:absolute;
+  width:1px;height:1px;overflow:hidden;clip-path:inset(50%);
+}
+
+/* ---------- sky ---------- */
+.sky{
+  border-radius:24px;
+  overflow:hidden;
+  border:4px solid var(--ink);
+  background:var(--ink);
+  line-height:0;
+}
+.sky svg{display:block;width:100%;height:auto}
+.caption{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:space-between;
+  align-items:center;
+  gap:6px 12px;
+  padding:0 6px;
+  font-weight:700;
+}
+.caption .part{
+  font-family:var(--font-display);
+  font-size:1.25rem;
+  line-height:1.1;
+}
+.moon-note{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:var(--ink);
+  font-size:.95rem;
+}
+.moon-note svg{flex:none;width:26px;height:26px}
+.moon-note small{font-weight:400;font-size:.85rem;color:var(--ink-soft)}
+
+/* ---------- digital ---------- */
+.digital{
+  background:var(--face);
+  border:4px solid var(--ink);
+  border-radius:24px;
+  padding:2px 10px;
+  display:grid;
+  grid-template-columns:1fr auto 1fr auto;
+  grid-template-rows:auto auto auto;
+  align-items:center;
+  justify-items:center;
+  column-gap:6px;
+}
+.digital input{
+  grid-row:2;
+  width:100%;
+  min-width:0;
+  border:0;
+  background:transparent;
+  text-align:center;
+  font-family:var(--font-display);
+  font-weight:800;
+  font-size:clamp(2rem,10vw,2.6rem);
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+  padding:0;
+  border-radius:12px;
+}
+#hh{color:var(--hour)}
+#mm{color:var(--minute)}
+.digital input:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.colon{
+  grid-row:2;grid-column:2;
+  font-family:var(--font-display);
+  font-weight:800;
+  font-size:clamp(2rem,10vw,2.6rem);
+  line-height:1;
+  transform:translateY(-.06em);
+}
+.digital.live .colon{animation:blink 2s steps(1) infinite}
+@keyframes blink{50%{opacity:.25}}
+.step{
+  width:100%;
+  max-width:100px;
+  height:26px;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  border-radius:12px;
+  touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;
+}
+.step svg{width:26px;height:14px}
+.step.h{color:var(--hour)}
+.step.m{color:var(--minute)}
+.step:active{transform:scale(.9)}
+.step:focus-visible,.ampm:focus-visible,.pill:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.ampm{
+  grid-row:2;grid-column:4;
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:1.1rem;
+  line-height:1;
+  color:var(--face);
+  background:var(--ink);
+  border:0;
+  border-radius:12px;
+  padding:9px 10px 7px;
+  min-width:52px;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.ampm:active{transform:scale(.94)}
+
+/* ---------- face ---------- */
+.face-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+#face{width:100%;max-width:340px;height:auto;display:block;-webkit-user-select:none;user-select:none}
+#face text{font-family:var(--font-display);font-weight:700}
+#minHand{cursor:grab;outline:none}
+#minHand,#minHand *{touch-action:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#minHand.dragging{cursor:grabbing}
+#minHand:focus-visible .knob{stroke:var(--ink);stroke-width:5}
+.hint{margin:0;font-size:.9rem;color:var(--ink-soft);text-align:center}
+
+/* ---------- day row ---------- */
+.row{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.day{display:flex;align-items:center;gap:6px}
+.day output{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:1.1rem;
+  min-width:8.2em;
+  text-align:center;
+  font-variant-numeric:tabular-nums;
+}
+.pill{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:1.05rem;
+  line-height:1;
+  border:3px solid var(--ink);
+  background:var(--face);
+  color:var(--ink);
+  border-radius:999px;
+  min-width:44px;
+  height:44px;
+  padding:2px 14px 0;
+  cursor:pointer;
+  touch-action:manipulation;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.pill:active{transform:translateY(2px)}
+.pill .dot{width:10px;height:10px;border-radius:50%;background:#b9b4a3}
+.pill[aria-pressed="true"]{background:var(--ink);color:var(--face)}
+.pill[aria-pressed="true"] .dot{background:#5fe08a}
+
+/* ---------- calendar ---------- */
+.cal{
+  background:var(--face);
+  border:4px solid var(--ink);
+  border-radius:24px;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.cal-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cal h2{
+  margin:0;
+  font-family:var(--font-display);
+  font-weight:800;
+  font-size:1.3rem;
+  line-height:1.1;
+  text-wrap:balance;
+  text-align:center;
+}
+.cal .pill{border-width:3px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.dow{
+  text-align:center;
+  font-size:.72rem;
+  font-weight:700;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+.cell{
+  aspect-ratio:1/1;
+  min-width:0;
+  border:0;
+  border-radius:12px;
+  background:transparent;
+  color:var(--ink);
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:1rem;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  cursor:pointer;
+  padding:0;
+  touch-action:manipulation;
+  transition:background .8s, color .8s;
+}
+.cell:hover{background:#f3ecd3}
+.cell.out{color:#aaa591}
+.cell.today{box-shadow:inset 0 0 0 2px var(--hour)}
+.cell.sel{box-shadow:0 3px 0 var(--ink), inset 0 0 0 2px var(--ink)}
+.cell:focus-visible{outline:3px solid var(--ink);outline-offset:1px}
+.cell svg{width:13px;height:13px;flex:none}
+.cell .orb{position:absolute;width:7px;height:7px;border-radius:50%}
+.cal-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.cal-foot .hint{text-align:left;flex:1 1 150px}
+
+@media (prefers-reduced-motion:reduce){
+  .cell{transition:none}
+  .digital.live .colon{animation:none}
+  .step:active,.ampm:active,.pill:active{transform:none}
+}
+</style>
+</head>
+<body>
+<main class="toy">
+  <h1>Sun and Moon Toy Clock</h1>
+
+  <div class="sky">
+    <svg id="sky" viewBox="0 0 400 180" role="img" aria-labelledby="skyLabel">
+      <title id="skyLabel">Sky</title>
+      <defs>
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop id="skyTop" offset="0" stop-color="#3f97e0"/>
+          <stop id="skyBot" offset="1" stop-color="#b5e0f7"/>
+        </linearGradient>
+        <radialGradient id="sunGlow">
+          <stop offset="0" stop-color="#fff3b0" stop-opacity=".75"/>
+          <stop offset="1" stop-color="#fff3b0" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="moonGlow">
+          <stop offset="0" stop-color="#dfe8ff" stop-opacity=".45"/>
+          <stop offset="1" stop-color="#dfe8ff" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect width="400" height="180" fill="url(#skyGrad)"/>
+      <g id="stars" fill="#fff"></g>
+      <g id="clouds" fill="#fff">
+        <g transform="translate(70 48)"><ellipse rx="26" ry="9"/><ellipse cx="-10" cy="-7" rx="13" ry="9"/><ellipse cx="9" cy="-9" rx="15" ry="11"/></g>
+        <g transform="translate(300 70) scale(.8)"><ellipse rx="26" ry="9"/><ellipse cx="-10" cy="-7" rx="13" ry="9"/><ellipse cx="9" cy="-9" rx="15" ry="11"/></g>
+      </g>
+      <g id="sun">
+        <circle r="46" fill="url(#sunGlow)"/>
+        <circle id="sunDisc" r="20" fill="#ffd84a"/>
+      </g>
+      <g id="moon">
+        <circle r="38" fill="url(#moonGlow)"/>
+        <circle r="17" fill="#2a3360" stroke="#8f9bd0" stroke-width="1"/>
+        <path id="moonLit" fill="#f6f1d8"/>
+      </g>
+      <path id="hillBack" d="M0,150 C60,118 120,128 190,146 C250,160 310,120 400,140 L400,180 L0,180 Z"/>
+      <path id="hillFront" d="M0,166 C80,140 150,170 230,158 C300,148 350,160 400,152 L400,180 L0,180 Z"/>
+    </svg>
+  </div>
+
+  <div class="caption">
+    <span class="part" id="part">Morning</span>
+    <span class="moon-note">
+      <svg viewBox="-13 -13 26 26" aria-hidden="true">
+        <circle r="11" fill="#2a3360"/>
+        <path id="moonIcon" fill="#f6f1d8"/>
+        <circle r="11" fill="none" stroke="#1c2333" stroke-width="2"/>
+      </svg>
+      <span><span id="phaseName">Full moon</span> <small id="phaseLit"></small></span>
+    </span>
+  </div>
+
+  <div class="face-wrap">
+    <svg id="face" viewBox="0 0 300 300" aria-label="Clock face">
+      <circle cx="150" cy="150" r="146" fill="#1c2333"/>
+      <circle cx="150" cy="150" r="138" fill="#fffdf6"/>
+      <g id="marks"></g>
+      <g id="hourHand">
+        <line x1="150" y1="162" x2="150" y2="88" stroke="#1d5fd0" stroke-width="12" stroke-linecap="round"/>
+      </g>
+      <g id="minHand" tabindex="0" role="slider" aria-label="Minute hand" aria-valuemin="0" aria-valuemax="59" aria-valuenow="0">
+        <line x1="150" y1="168" x2="150" y2="50" stroke="#e03a2b" stroke-width="7" stroke-linecap="round"/>
+        <circle class="knob" cx="150" cy="50" r="13" fill="#e03a2b" stroke="#fffdf6" stroke-width="3"/>
+        <circle cx="150" cy="50" r="4" fill="#fffdf6"/>
+        <line x1="150" y1="172" x2="150" y2="34" stroke="transparent" stroke-width="60" stroke-linecap="round"/>
+      </g>
+      <circle cx="150" cy="150" r="9" fill="#1c2333"/>
+      <circle cx="150" cy="150" r="3.5" fill="#ffc533"/>
+    </svg>
+    <p class="hint">Drag the red hand around the face. The blue hand follows.</p>
+  </div>
+
+  <div class="digital" id="digital">
+    <button class="step h" style="grid-row:1;grid-column:1" data-step="60" aria-label="Hour up" type="button"><svg viewBox="0 0 34 20"><path d="M17 3 31 17H3Z" fill="currentColor" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/></svg></button>
+    <button class="step m" style="grid-row:1;grid-column:3" data-step="1" aria-label="Minute up" type="button"><svg viewBox="0 0 34 20"><path d="M17 3 31 17H3Z" fill="currentColor" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/></svg></button>
+
+    <input id="hh" style="grid-column:1" inputmode="numeric" maxlength="2" autocomplete="off" aria-label="Hour">
+    <span class="colon" aria-hidden="true">:</span>
+    <input id="mm" style="grid-column:3" inputmode="numeric" maxlength="2" autocomplete="off" aria-label="Minute">
+    <button class="ampm" id="ampm" type="button" aria-label="Switch between AM and PM">AM</button>
+
+    <button class="step h" style="grid-row:3;grid-column:1" data-step="-60" aria-label="Hour down" type="button"><svg viewBox="0 0 34 20"><path d="M17 17 31 3H3Z" fill="currentColor" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/></svg></button>
+    <button class="step m" style="grid-row:3;grid-column:3" data-step="-1" aria-label="Minute down" type="button"><svg viewBox="0 0 34 20"><path d="M17 17 31 3H3Z" fill="currentColor" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/></svg></button>
+  </div>
+
+  <section class="cal" aria-labelledby="calTitle">
+    <div class="cal-head">
+      <button class="pill" id="calPrev" type="button" aria-label="Previous month">&#8249;</button>
+      <h2 id="calTitle" aria-live="polite">Month</h2>
+      <button class="pill" id="calNext" type="button" aria-label="Next month">&#8250;</button>
+    </div>
+    <div class="cal-grid" id="calDow" aria-hidden="true"></div>
+    <div class="cal-grid" id="calDays"></div>
+    <div class="cal-foot">
+      <span class="hint">Tap a day to jump to it. The time stays the same.</span>
+      <button class="pill" id="liveBtn" type="button" aria-pressed="true"><span class="dot"></span><span id="liveTxt">Real time</span></button>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  var MIN = 60000, HOUR = 3600000, DAY = 86400000;
+  var SYNODIC = 29.530588853 * DAY;
+  var NEW_MOON_0 = Date.UTC(2000, 0, 6, 18, 14);
+  var TZ = new Date().getTimezoneOffset() * MIN;
+
+  var $ = function(id){ return document.getElementById(id); };
+  var hh = $('hh'), mm = $('mm'), ampm = $('ampm'), digital = $('digital');
+  var minHand = $('minHand'), hourHand = $('hourHand'), face = $('face');
+  var sun = $('sun'), sunDisc = $('sunDisc'), moon = $('moon'), moonLit = $('moonLit'), moonIcon = $('moonIcon');
+  var liveBtn = $('liveBtn');
+
+  // Wall-clock time kept as "local time pretending to be UTC", so daylight
+  // saving jumps never make the toy skip or repeat an hour.
+  function wallNow(){
+    var n = new Date();
+    return Date.UTC(n.getFullYear(), n.getMonth(), n.getDate(), n.getHours(), n.getMinutes(), n.getSeconds());
+  }
+
+  var simMs = wallNow();
+  var live = true;
+  var dragging = false;
+
+  /* ---------- helpers ---------- */
+  function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+  function smooth(a, b, x){ var t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); }
+  function rgb(hex){ return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)]; }
+  function mix(a, b, t){
+    var A = rgb(a), B = rgb(b);
+    return 'rgb(' + Math.round(A[0]+(B[0]-A[0])*t) + ',' + Math.round(A[1]+(B[1]-A[1])*t) + ',' + Math.round(A[2]+(B[2]-A[2])*t) + ')';
+  }
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+
+  // hour, sky top, sky bottom
+  var SKY = [
+    [0,    '#0b1030', '#1c2452'],
+    [4.6,  '#0f1640', '#2a2f66'],
+    [5.6,  '#34417f', '#e58a6b'],
+    [6.6,  '#6aa5d8', '#f7c9a0'],
+    [8,    '#58a9e6', '#bfe2f5'],
+    [12,   '#3f97e0', '#b5e0f7'],
+    [16,   '#58a9e6', '#cfe6ee'],
+    [17.4, '#5a7fc0', '#f6b27a'],
+    [18.3, '#3a3f85', '#e9795d'],
+    [19.2, '#1a1f55', '#5b3f7a'],
+    [20.5, '#0b1030', '#1c2452'],
+    [24,   '#0b1030', '#1c2452']
+  ];
+  function skyAt(h){
+    for (var i = 0; i < SKY.length - 1; i++){
+      var a = SKY[i], b = SKY[i+1];
+      if (h >= a[0] && h <= b[0]){
+        var t = (h - a[0]) / (b[0] - a[0]);
+        return [mix(a[1], b[1], t), mix(a[2], b[2], t)];
+      }
+    }
+    return [SKY[0][1], SKY[0][2]];
+  }
+
+  // Lit part of a moon of radius r at phase p (0 new, .5 full), drawn for the
+  // northern hemisphere: waxing lights the right side.
+  function moonPath(r, p){
+    var k = Math.cos(2 * Math.PI * p);
+    var rx = Math.abs(k) * r;
+    var sweep = k > 0 ? 0 : 1;
+    return 'M0,' + (-r) + 'A' + r + ',' + r + ' 0 0 1 0,' + r +
+           'A' + rx.toFixed(2) + ',' + r + ' 0 0 ' + sweep + ' 0,' + (-r) + 'Z';
+  }
+  function phaseAt(ms){
+    var x = (ms + TZ - NEW_MOON_0) % SYNODIC;
+    if (x < 0) x += SYNODIC;
+    return x / SYNODIC;
+  }
+  function phaseName(p){
+    if (p < 0.034 || p > 0.966) return 'New moon';
+    if (p < 0.216) return 'Waxing crescent';
+    if (p < 0.284) return 'First quarter';
+    if (p < 0.466) return 'Waxing gibbous';
+    if (p < 0.534) return 'Full moon';
+    if (p < 0.716) return 'Waning gibbous';
+    if (p < 0.784) return 'Last quarter';
+    return 'Waning crescent';
+  }
+  function partOfDay(h){
+    if (h < 5) return 'Night';
+    if (h < 7) return 'Sunrise';
+    if (h < 11.5) return 'Morning';
+    if (h < 13) return 'Midday';
+    if (h < 17) return 'Afternoon';
+    if (h < 19) return 'Sunset';
+    if (h < 21) return 'Evening';
+    return 'Night';
+  }
+
+  /* ---------- static drawing ---------- */
+  (function buildFace(){
+    var NS = 'http://www.w3.org/2000/svg', g = $('marks'), i, a, el;
+    for (i = 0; i < 60; i++){
+      a = i * 6 * Math.PI / 180;
+      var five = i % 5 === 0;
+      var r1 = five ? 99 : 103, r2 = 108;
+      el = document.createElementNS(NS, 'line');
+      el.setAttribute('x1', 150 + Math.sin(a) * r1); el.setAttribute('y1', 150 - Math.cos(a) * r1);
+      el.setAttribute('x2', 150 + Math.sin(a) * r2); el.setAttribute('y2', 150 - Math.cos(a) * r2);
+      el.setAttribute('stroke', '#1c2333');
+      el.setAttribute('stroke-width', five ? 3 : 1.2);
+      el.setAttribute('stroke-linecap', 'round');
+      g.appendChild(el);
+    }
+    for (i = 1; i <= 12; i++){
+      a = i * 30 * Math.PI / 180;
+      el = document.createElementNS(NS, 'text');           // hour numeral
+      el.setAttribute('x', 150 + Math.sin(a) * 80); el.setAttribute('y', 150 - Math.cos(a) * 80);
+      el.setAttribute('text-anchor', 'middle'); el.setAttribute('dominant-baseline', 'central');
+      el.setAttribute('font-size', 27); el.setAttribute('fill', '#1d5fd0');
+      el.textContent = i; g.appendChild(el);
+      el = document.createElementNS(NS, 'text');           // minute numeral
+      el.setAttribute('x', 150 + Math.sin(a) * 125); el.setAttribute('y', 150 - Math.cos(a) * 125);
+      el.setAttribute('text-anchor', 'middle'); el.setAttribute('dominant-baseline', 'central');
+      el.setAttribute('font-size', 18); el.setAttribute('fill', '#e03a2b');
+      el.textContent = pad((i * 5) % 60); g.appendChild(el);
+    }
+  })();
+
+  (function buildStars(){
+    var NS = 'http://www.w3.org/2000/svg', g = $('stars'), s = 7;
+    function rnd(){ s = (s * 16807) % 2147483647; return s / 2147483647; }
+    for (var i = 0; i < 46; i++){
+      var c = document.createElementNS(NS, 'circle');
+      c.setAttribute('cx', (rnd() * 400).toFixed(1));
+      c.setAttribute('cy', (rnd() * 128).toFixed(1));
+      c.setAttribute('r', (0.6 + rnd() * 1.1).toFixed(2));
+      c.setAttribute('opacity', (0.5 + rnd() * 0.5).toFixed(2));
+      g.appendChild(c);
+    }
+  })();
+
+  /* ---------- calendar ---------- */
+  var monthFmt = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  var longFmt = new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' });
+  var dowFmt = new Intl.DateTimeFormat(undefined, { weekday: 'short', timeZone: 'UTC' });
+  (function(){
+    var g = $('calDow');
+    for (var i = 0; i < 7; i++){            // Jan 4 2026 is a Sunday
+      var el = document.createElement('div');
+      el.className = 'dow';
+      el.textContent = dowFmt.format(Date.UTC(2026, 0, 4 + i)).slice(0, 2);
+      g.appendChild(el);
+    }
+  })();
+  var viewY, viewM, lastSelYM = '', lastKey = '', selCell = null;
+  function renderCalendar(d, cols, dayness){
+    var y = d.getUTCFullYear(), m = d.getUTCMonth(), day = d.getUTCDate();
+    var ym = y + '-' + m;
+    if (ym !== lastSelYM){ viewY = y; viewM = m; lastSelYM = ym; }
+    var t = new Date(wallNow());
+    var todayKey = t.getUTCFullYear() + '-' + t.getUTCMonth() + '-' + t.getUTCDate();
+    var key = viewY + '-' + viewM + '|' + ym + '-' + day + '|' + todayKey;
+    if (key !== lastKey){
+      lastKey = key;
+      selCell = null;
+      $('calTitle').textContent = monthFmt.format(Date.UTC(viewY, viewM, 1));
+      var g = $('calDays'); g.textContent = '';
+      var first = new Date(Date.UTC(viewY, viewM, 1)).getUTCDay();
+      for (var i = 0; i < 42; i++){
+        var cd = new Date(Date.UTC(viewY, viewM, 1 - first + i));
+        var cy = cd.getUTCFullYear(), cm = cd.getUTCMonth(), cdd = cd.getUTCDate();
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'cell' + (cm !== viewM ? ' out' : '');
+        if (cy + '-' + cm + '-' + cdd === todayKey) b.className += ' today';
+        var isSel = cy === y && cm === m && cdd === day;
+        if (isSel){ b.className += ' sel'; b.setAttribute('aria-current', 'date'); selCell = b; }
+        var p = phaseAt(Date.UTC(cy, cm, cdd, 21));    // the moon you'd see that evening
+        b.setAttribute('aria-label', longFmt.format(cd) + ', ' + phaseName(p).toLowerCase());
+        b.innerHTML = '<span>' + cdd + '</span><svg viewBox="-6.5 -6.5 13 13" aria-hidden="true"><circle r="5.5" fill="#2a3360"/><path fill="#f6f1d8" d="' +
+          moonPath(5.5, p) + '"' + (p > 0.5 ? ' transform="scale(-1,1)"' : '') + '/></svg>';
+        b.setAttribute('data-date', cy + ',' + cm + ',' + cdd);
+        g.appendChild(b);
+      }
+    }
+    if (selCell){
+      selCell.style.background = 'linear-gradient(180deg,' + cols[0] + ',' + cols[1] + ')';
+      selCell.style.color = dayness > 0.45 ? '#1c2333' : '#ffffff';
+    }
+  }
+  $('calDays').addEventListener('click', function(e){
+    var b = e.target.closest('.cell');
+    if (!b) return;
+    var parts = b.getAttribute('data-date').split(',').map(Number);
+    takeOver();
+    var tod = ((simMs % DAY) + DAY) % DAY;
+    simMs = Date.UTC(parts[0], parts[1], parts[2]) + tod;
+    render();
+  });
+  function shiftView(n){
+    viewM += n;
+    if (viewM < 0){ viewM = 11; viewY--; }
+    if (viewM > 11){ viewM = 0; viewY++; }
+    render();
+  }
+  $('calPrev').addEventListener('click', function(){ shiftView(-1); });
+  $('calNext').addEventListener('click', function(){ shiftView(1); });
+
+  /* ---------- render ---------- */
+  function render(){
+    var totalMin = simMs / MIN;
+    var shownMin = dragging ? Math.round(totalMin) : Math.floor(totalMin);
+    var d = new Date(shownMin * MIN);
+    var h24 = d.getUTCHours(), m = d.getUTCMinutes();
+    var h12 = ((h24 + 11) % 12) + 1;
+
+    if (document.activeElement !== hh) hh.value = h12;
+    if (document.activeElement !== mm) mm.value = pad(m);
+    ampm.textContent = h24 < 12 ? 'AM' : 'PM';
+    digital.classList.toggle('live', live);
+
+    // hands follow the exact (fractional) time so dragging feels smooth
+    var dayMin = ((totalMin % 1440) + 1440) % 1440;
+    var hourF = dayMin / 60;
+    minHand.setAttribute('transform', 'rotate(' + ((dayMin % 60) * 6).toFixed(2) + ' 150 150)');
+    hourHand.setAttribute('transform', 'rotate(' + ((hourF % 12) * 30).toFixed(2) + ' 150 150)');
+    minHand.setAttribute('aria-valuenow', m);
+    minHand.setAttribute('aria-valuetext', h12 + ':' + pad(m) + ' ' + (h24 < 12 ? 'AM' : 'PM'));
+
+    // sky
+    var cols = skyAt(hourF);
+    $('skyTop').setAttribute('stop-color', cols[0]);
+    $('skyBot').setAttribute('stop-color', cols[1]);
+    var dayness = smooth(5.4, 7, hourF) * (1 - smooth(17.2, 18.9, hourF));
+    $('stars').setAttribute('opacity', (1 - smooth(5, 6, hourF) * (1 - smooth(18.6, 19.8, hourF))).toFixed(2));
+    $('clouds').setAttribute('opacity', (dayness * 0.9).toFixed(2));
+    $('hillBack').setAttribute('fill', mix('#1a2748', '#6fbf73', dayness));
+    $('hillFront').setAttribute('fill', mix('#111c36', '#3f9d5a', dayness));
+
+    var u, x, y, up;
+    // sun: 6:00 at the left horizon, noon overhead, 18:00 at the right horizon
+    u = (hourF - 6) / 12;
+    if (u >= -0.02 && u <= 1.02){
+      up = Math.sin(Math.PI * clamp(u, 0, 1));
+      x = 40 + u * 320; y = 160 - up * 122;
+      sun.setAttribute('transform', 'translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ')');
+      sunDisc.setAttribute('fill', mix('#ff8a3d', '#ffd84a', smooth(0, 0.55, up)));
+      sun.style.display = '';
+    } else sun.style.display = 'none';
+
+    // moon: 18:00 at the left horizon, midnight overhead, 6:00 at the right horizon
+    u = (((hourF - 18) % 24) + 24) % 24 / 12;
+    if (u <= 1.02){
+      up = Math.sin(Math.PI * clamp(u, 0, 1));
+      x = 40 + u * 320; y = 160 - up * 122;
+      moon.setAttribute('transform', 'translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ')');
+      moon.style.display = '';
+    } else moon.style.display = 'none';
+
+    var p = phaseAt(simMs), flip = p > 0.5 ? 'scale(-1,1)' : '';
+    moonLit.setAttribute('d', moonPath(17, p)); moonLit.setAttribute('transform', flip);
+    moonIcon.setAttribute('d', moonPath(11, p)); moonIcon.setAttribute('transform', flip);
+    var lit = Math.round((1 - Math.cos(2 * Math.PI * p)) / 2 * 100);
+    var name = phaseName(p), part = partOfDay(hourF);
+    $('phaseName').textContent = name;
+    $('phaseLit').textContent = lit + '% lit';
+    $('part').textContent = part;
+    $('skyLabel').textContent = part + ' sky. Moon phase: ' + name + '.';
+    renderCalendar(d, cols, dayness);
+
+    liveBtn.setAttribute('aria-pressed', live ? 'true' : 'false');
+    $('liveTxt').textContent = live ? 'Real time' : 'Back to now';
+  }
+
+  /* ---------- changing the time ---------- */
+  function takeOver(){               // the viewer is now setting the time by hand
+    if (live){ live = false; simMs = Math.floor(simMs / MIN) * MIN; }
+  }
+  function nudge(ms){ takeOver(); simMs += ms; render(); }
+
+  // minute hand: drag around the centre; movement is relative, so grabbing never jumps
+  var lastAng = 0;
+  function pointerAngle(e){
+    var r = face.getBoundingClientRect();
+    return Math.atan2(e.clientX - (r.left + r.width / 2), -(e.clientY - (r.top + r.height / 2))) * 180 / Math.PI;
+  }
+  minHand.addEventListener('pointerdown', function(e){
+    e.preventDefault();
+    takeOver();
+    dragging = true;
+    dragId = e.pointerId;
+    lastAng = pointerAngle(e);
+    minHand.classList.add('dragging');
+    try { minHand.setPointerCapture(e.pointerId); } catch (err) {}
+    if (document.activeElement && document.activeElement.blur && document.activeElement !== minHand) document.activeElement.blur();
+  });
+  minHand.addEventListener('touchstart', function(e){ e.preventDefault(); }, { passive: false });
+  minHand.addEventListener('touchmove', function(e){ e.preventDefault(); }, { passive: false });
+  var dragId = null;
+  window.addEventListener('pointermove', function(e){
+    if (!dragging || (dragId !== null && e.pointerId !== dragId)) return;
+    var a = pointerAngle(e), dlt = a - lastAng;
+    if (dlt > 180) dlt -= 360;
+    if (dlt < -180) dlt += 360;
+    lastAng = a;
+    simMs += dlt * 10000;            // 6 degrees = 1 minute
+    render();
+  });
+  function endDrag(e){
+    if (!dragging || (e && dragId !== null && e.pointerId !== dragId)) return;
+    dragging = false;
+    dragId = null;
+    minHand.classList.remove('dragging');
+    simMs = Math.round(simMs / MIN) * MIN;
+    render();
+  }
+  window.addEventListener('pointerup', endDrag);
+  window.addEventListener('pointercancel', endDrag);
+  minHand.addEventListener('keydown', function(e){
+    var step = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 5, PageDown: -5 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    nudge(step * MIN);
+  });
+
+  // stepper arrows: tap for one step, hold to keep going
+  var holdT = null, holdI = null;
+  function stopHold(){ clearTimeout(holdT); clearInterval(holdI); holdT = holdI = null; }
+  Array.prototype.forEach.call(document.querySelectorAll('.step'), function(btn){
+    var ms = Number(btn.getAttribute('data-step')) * MIN;
+    function go(){
+      if (document.activeElement === hh || document.activeElement === mm) document.activeElement.blur();
+      nudge(ms);
+    }
+    btn.addEventListener('pointerdown', function(e){
+      if (e.button) return;
+      go();
+      stopHold();
+      holdT = setTimeout(function(){ holdI = setInterval(go, 90); }, 450);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function(ev){ btn.addEventListener(ev, stopHold); });
+    btn.addEventListener('click', function(e){ if (e.detail === 0) go(); });   // keyboard
+    btn.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  });
+
+  // typing straight into the digits
+  function current(){ var d = new Date(Math.floor(simMs / MIN) * MIN); return { h: d.getUTCHours(), m: d.getUTCMinutes() }; }
+  function commitHour(){
+    var v = parseInt(hh.value, 10), c = current();
+    if (v >= 1 && v <= 12){
+      var target = (v % 12) + (c.h >= 12 ? 12 : 0);
+      if (target !== c.h) nudge((target - c.h) * HOUR);
+    }
+    render();
+  }
+  function commitMinute(){
+    var v = parseInt(mm.value, 10), c = current();
+    if (v >= 0 && v <= 59 && v !== c.m) nudge((v - c.m) * MIN);
+    render();
+  }
+  [[hh, commitHour], [mm, commitMinute]].forEach(function(pair){
+    var el = pair[0], commit = pair[1];
+    el.addEventListener('focus', function(){ el.select(); });
+    el.addEventListener('input', function(){ el.value = el.value.replace(/\D/g, '').slice(0, 2); });
+    el.addEventListener('blur', commit);
+    el.addEventListener('keydown', function(e){
+      if (e.key === 'Enter'){ e.preventDefault(); el.blur(); }
+      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown'){
+        e.preventDefault();
+        var s = (e.key === 'ArrowUp' ? 1 : -1) * (el === hh ? HOUR : MIN);
+        takeOver(); simMs += s;
+        var c = current();
+        el.value = el === hh ? ((c.h + 11) % 12) + 1 : pad(c.m);
+        render(); el.select();
+      }
+    });
+  });
+
+  ampm.addEventListener('click', function(){ nudge(current().h < 12 ? 12 * HOUR : -12 * HOUR); });
+  liveBtn.addEventListener('click', function(){ live = true; simMs = wallNow(); render(); });
+
+  setInterval(function(){ if (live && !dragging){ simMs = wallNow(); render(); } }, 1000);
+
+  /* ---------- boot (keeps the viewer's time across a republish) ---------- */
+  function start(saved){
+    if (saved && typeof saved.simMs === 'number'){ simMs = saved.simMs; live = !!saved.live; }
+    if (live) simMs = wallNow();
+    render();
+  }
+  var hot = window.claude && window.claude.hot;
+  if (hot && hot.snapshot) hot.snapshot(function(){ return { simMs: simMs, live: live }; });
+  if (hot && hot.ready) hot.ready(start); else start((hot && hot.data) || {});
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js'); });
+}
+</script>
+</body>
+</html>

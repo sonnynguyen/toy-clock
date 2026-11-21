@@ -1,0 +1,16 @@
+{
+  "name": "Sun and Moon Toy Clock",
+  "short_name": "Toy Clock",
+  "description": "A teaching clock with a sun, moon and moon-phase sky.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#dfe8ee",
+  "theme_color": "#ffc533",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
